@@ -1,0 +1,5 @@
+# Mac Stuff
+*.py
+Estensione/*
+.DS_Store
+*/.DS_Store
