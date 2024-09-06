@@ -36,7 +36,8 @@ tomografo(ID, RID, DAY, TS) :- tomografo(ID, RID, DAY), res(RID, DAY, TS, 1).
 :- #count{RID : chair(ID, RID, DAY, TS)} > 1, chair(ID,_), mss(DAY, TS).
 :- #count{RID: tomografo(ID, RID, DAY, TS)} > 1, tomografo(ID,_), mss(DAY, TS).
 %% Assegna tutti i pazienti
-:~ not x(RID, DAY, _, _,0), reg(RID, DAY, _). [1@3, RID, DAY]
+not_assigned(N, DAY) :- #count{RID: not x(RID, DAY, _, _,0), reg(RID, DAY, _)} = N, mss(DAY, _).
+:~ not_assigned(N, DAY). [N@3, DAY]
 %:~ x(RID, _, START, PROTOCOL, 0), x(RID, _, END, _, 3), cost(PROTOCOL, TOT), END - START - TOT >= 0. [END - START - TOT@2, RID]
 #show x/5.
 #show.
