@@ -1,43 +1,18 @@
-%% Assegna un orario di ammissione a tutti
-0 {x(RID, DAY, TS, PROTOCOL, 0) : mss(DAY, TS)} 1 :- reg(RID, DAY, PROTOCOL).
-%%{x(RID, DAY, START, PROTOCOL, 1) : mss(DAY, START), START >= TS + ESAME} = 1 :- x(RID, DAY, TS, PROTOCOL, 0), percorso(PROTOCOL, 0, ESAME).
-{x(RID, DAY, START, PROTOCOL, N+1) : mss(DAY,START), START = TS+ESAME} = 1 :- x(RID, DAY, TS, PROTOCOL, N), percorso(PROTOCOL, N, ESAME), N >= 0, N < 3.
-:- x(RID, _, TS, PROTOCOL, 3), percorso(PROTOCOL, 3, ESAME), TS + ESAME >= 120.
-%% Ci deve essere un paziente con biodistribuzione durante inizio brain dinamico
-%% Limite due pazienti al massimo in anamnesi
-:- #count{RID: timeAnamnesi(RID, TS)} > 2, mss(DAY,TS).
-timeAnamnesi(RID, TS..TS+ESAME-1) :- x(RID, DAY, TS, PROTOCOL, 0), percorso(PROTOCOL, 0, ESAME).
-%% Assegna atomo res per ogni TS in cui viene occupata una poltrona dai pazienti che la richiedono 
-%% e il tempo di occupazione richiesto di un tomografo per chi fa tutto sul tomografo
-timeOccupation(RID, DAY, TS, END, PROTOCOL) :- x(RID, DAY, TS, PROTOCOL, 1), x(RID, DAY, END, PROTOCOL, 3).
-res(RID, DAY, TS..END-1,0) :- timeOccupation(RID, DAY, TS, END, PROTOCOL), poltrone(PROTOCOL).
-res(RID, DAY, TS..TS+ESAME-1,1) :- x(RID, DAY, TS, PROTOCOL, 3), percorso(PROTOCOL, 3, ESAME), poltrone(PROTOCOL).
-res(RID, DAY, TS..END+ESAME-1,1) :- timeOccupation(RID, DAY, TS, END, PROTOCOL), percorso(PROTOCOL, 3, ESAME), not poltrone(PROTOCOL).
-
-%% Vincoli su protocolli
-% Al massimo N pazienti con protocollo x per ogni tomografo (Unsat se input con più di N*2 protocolli X)
-:- #count{RID: tomografo(ID, RID, DAY), x(RID, DAY, _, X, _)} > N, limit(X, N), tomografo(ID,_).
-% Protocollo X su tomografo ID
-:- not tomografo(ID, RID, DAY), x(RID, DAY, _, X, _), on(X, ID).
-% Se X su tomografo allora non può esserci Y - preprocessing
-%on(Y,ID2) :- tomografo(ID, RID, DAY), x(RID, DAY, _, X, _), X = (813;814), Y = (820;825;829), tomografo(ID2,_), ID != ID2.
-%on(Y,ID2) :- tomografo(ID, RID, DAY), x(RID, DAY, _, X, _), X = (816;817;818;819;820), Y = (820;825;829), tomografo(ID2,_), ID != ID2.
-
-
-%% Assegna una poltrona a chi la richiede e il tomografo a tutti
-%%Crea atomo Res per ogni TS in cui è richiesta la poltrona o il tomografo
-1 {chair(ID, RID, DAY) : chair(ID, _)} 1 :- x(RID, DAY, _, PROTOCOL, _), poltrone(PROTOCOL).
-1 {tomografo(ID, RID, DAY) : tomografo(ID, _)} 1 :- x(RID, DAY, _, PROTOCOL, _).
-%% Chi passa da poltrona a tomografo deve rimanere nella stessa stanza
-:- chair(SEDIA, RID, DAY), tomografo(TOMOGRAFO, RID, DAY), chair(SEDIA, ID1), tomografo(TOMOGRAFO, ID2), ID1 != ID2.
-chair(ID, RID, DAY, TS) :- chair(ID, RID, DAY), res(RID, DAY, TS, 0).
-tomografo(ID, RID, DAY, TS) :- tomografo(ID, RID, DAY), res(RID, DAY, TS, 1).
-%% Un solo paziente per ogni sedia
-:- #count{RID : chair(ID, RID, DAY, TS)} > 1, chair(ID,_), mss(DAY, TS).
-:- #count{RID: tomografo(ID, RID, DAY, TS)} > 1, tomografo(ID,_), mss(DAY, TS).
-%% Assegna tutti i pazienti
-not_assigned(N, DAY) :- #count{RID: not x(RID, DAY, _, _,0), reg(RID, DAY, _)} = N, mss(DAY, _).
-:~ not_assigned(N, DAY). [N@3, DAY]
-%:~ x(RID, _, START, PROTOCOL, 0), x(RID, _, END, _, 3), cost(PROTOCOL, TOT), END - START - TOT >= 0. [END - START - TOT@2, RID]
-#show x/5.
-#show.
+0 {x(ID, D, TS, PrID, 0) : avail(TS, D)} 1 :- reg(ID, D, PrID).
+{x(ID, D, START, PrID, P+1) : avail(START, D), START = TS+NumTS} = 1 :- x(ID, D, TS, PrID, P), exam(PrID, P, NumTS), P >= 0, P < 3.
+:- x(ID, _, TS, PrID, 3), exam(PrID, 3, NumTS), TS + NumTS >= 120.
+:- #count{ID: timeAnamnesis(ID, TS)} > 2, avail(TS, D).
+timeAnamnesis(ID, TS..TS+NumTS-1) :- x(ID, D, TS, PrID, 0), exam(PrID, 0, NumTS).
+timeOccupation(ID, D, TS, END, PrID) :- x(ID, D, TS, PrID, 1), x(ID, D, END, PrID, 3).
+res(ID, D, TS..END-1,0) :- timeOccupation(ID, D, TS, END, PrID), required_chair(PrID).
+res(ID, D, TS..TS+NumTS-1,1) :- x(ID, D, TS, PrID, 3), exam(PrID, 3, NumTS), required_chair(PrID).
+res(ID, D, TS..END+NumTS-1,1) :- timeOccupation(ID, D, TS, END, PrID), exam(PrID, 3, NumTS), not required_chair(PrID).
+:- #count{ID: tomograph(T, ID, D), x(ID, D, _, X, _)} > N, limit(X, N), tomograph(T,_).
+1 {chair(C, ID, D) : chair(C, _)} 1 :- x(ID, D, _, PrID, _), required_chair(PrID).
+1 {tomograph(T, ID, D) : tomograph(T, _)} 1 :- x(ID, D, _, PrID, _).
+:- chair(C, ID, D), tomograph(T, ID, D), chair(C, R1), tomograph(T, R2), R1 != R2.
+chair(C, ID, D, TS) :- chair(C, ID, D), res(ID, D, TS, 0).
+tomograph(T, ID, D, TS) :- tomograph(T, ID, D), res(ID, D, TS, 1).
+:- #count{ID : chair(C, ID, D, TS)} > 1, chair(C,_), avail(TS, D).
+:- #count{ID: tomograph(T, ID, D, TS)} > 1, tomograph(T,_), avail(TS, D).
+:~ not x(ID, D, _, _,0), reg(ID, D, _), reg(ID, D, _). [1@2, ID]

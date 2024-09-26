@@ -1,32 +1,23 @@
 #program base.
-%% Assign a patient and a room
-0 {x(RID, DAY, PROTOCOL, 0) : mss(DAY, _)} 1 :- reg(RID, DAY, PROTOCOL).
-{room(RID, ROOM_ID) : tomografo(_, ROOM_ID)} = 1 :- x(RID, DAY, _, _).
-
-%% Tempo occupazione tomografo e sedie
-timeOccupation(RID, L1+L2, P) :- reg(RID, _, P), percorso(P, 1, L1), percorso(P, 2, L2).
-dur(RID, L, 0) :- timeOccupation(RID, L, P), poltrone(P).
-dur(RID, L, 1) :- reg(RID, _, P), percorso(P, 3, L), poltrone(PROTOCOL).
-dur(RID, L0+L1,1) :- timeOccupation(RID, L0, PROTOCOL), percorso(PROTOCOL, 3, L1), not poltrone(PROTOCOL).
-
-%% Upper limit da limare successivamente.
-:- #sum{L, RID: dur(RID, L, 0), room(RID,ROOM_ID)} > 360, room(_, ROOM_ID).
-:- #sum{L, RID: dur(RID, L, 1), room(RID,ROOM_ID)} > 120, room(_, ROOM_ID). 
-
-%% Vincoli su protocolli
-% Al massimo N pazienti con protocollo x per ogni tomografo (Unsat se input con più di N*2 protocolli X)
-:- #count{RID: room(RID, ROOM_ID), x(RID, _, X, _)} > N, limit(X, N), room(_,ROOM_ID).
-:- not room(RID, ID), x(RID, DAY, X, _), on(X, ID).
-
-:~ not x(RID, DAY,  _,0), reg(RID, DAY, _). [1@3, RID, DAY]
+0 {x(ID, D, PrID, 0) : avail(_, D)} 1 :- reg(ID, D, PrID).
+{room(ID, ROOM_ID) : tomograph(_, ROOM_ID)} = 1 :- x(ID, D, _, _).
+timeOccupation(ID, L1+L2, PrID) :- reg(ID, _, PrID), exam(PrID, 1, L1), exam(PrID, 2, L2).
+dur(ID, L, 0) :- timeOccupation(ID, L, PrID), required_chair(PrID).
+dur(ID, L, 1) :- reg(ID, _, P), exam(P, 3, L), required_chair(PrID).
+dur(ID, L0+L1,1) :- timeOccupation(ID, L0, PrID), exam(PrID, 3, L1), not required_chair(PrID).
+:- #sum{L, ID: dur(ID, L, 0), room(ID,ROOM_ID)} > 360, room(_, ROOM_ID).
+:- #sum{L, ID: dur(ID, L, 1), room(ID,ROOM_ID)} > 120, room(_, ROOM_ID). 
+:- #count{ID: room(ID, ROOM_ID), x(ID, _, X, _)} > N, limit(X, N), room(_,ROOM_ID).
+:- not room(ID, ID), x(ID, D, X, _), on(X, ID).
+:~ not x(ID, D,  _,0), reg(ID, D, _). [1@3, ID, D]
 
 #show x/4.
-#show poltrone/1.
+#show required_chair/1.
 #show room/2.
-#show tomografo/2.
+#show tomograph/2.
 #show chair/2.
-#show mss/2.
-#show percorso/3.
+#show avail/2.
+#show exam/3.
 #show dur/3.
 #show reg/3.
 #show cost/2.
@@ -53,7 +44,7 @@ import math
 def get_text(flag=None):
     text = None
     if flag is None:
-        with open("Multi/app_check.lp", "r") as reader:
+        with open("Encoding/SP.lp", "r") as reader:
             text = reader.read()
     return text
 
