@@ -60,6 +60,8 @@ def main(prg):
 
     
     def on_model(m):
+        nonlocal model_tmp
+        model_tmp = m.symbols(shown=True)
         return
     
 
@@ -67,7 +69,7 @@ def main(prg):
     def solve(program, parts):
             program.ground(parts)
             with program.solve(on_model=handle_stop, async_=True) as hnd:
-                hnd.wait(5)
+                hnd.wait(8)
                 hnd.cancel()
                 if not hnd.get():
                     return
@@ -128,13 +130,14 @@ def main(prg):
         return sum(times)
     
     cost = [float('inf')]
+    final_delay = 100
     model = None
     model_tmp = None
     prg.configuration.solve.opt_mode = 'opt'   
     iteration = 0
     base = ("base", [])
     parts = []
-    timeout = 10
+    timeout = 5
     check_text = get_text()
     final_check = get_text("F")
     start = time.time()
@@ -171,6 +174,8 @@ def main(prg):
                 n = get_no_good_tomo(model, room)
                 print(f"Add limite {n} a stanza {room}")
                 parts.append(("check", [clingo.Number(n), clingo.Number(room), clingo.Number(iteration)]))
+            else:
+                final_delay = sum([int(re.findall("\d+", str(x))[1]) for x in model_tmp])
         
         if found_unsat:
             iteration += 1
@@ -180,5 +185,5 @@ def main(prg):
             break
 
     time_final = time.time() -start
-    print(f"Final cost {cost} found in {time_final} seconds")
+    print(f"Final cost {cost} with delay {final_delay} found in {time_final} seconds")
 #end.
