@@ -1,4 +1,5 @@
 #const max_time = 119.
+delay(6).
 overlap(ID1, ID2, L1, L2) :- room(ID1, _), dur_tom(ID1,L1), x(ID2, _, _, _), room(ID2, _), dur_tom(ID2,L2), ID1 < ID2.
 {order(ID1, ID2, L2)} :- overlap(ID1,ID2,_,L2).
 order(ID2, ID1, L1) :- not order(ID1, ID2, _), overlap(ID1, ID2, L1, _).
@@ -23,7 +24,7 @@ timeOccupation(ID, L1+L2, PrID) :- reg(ID, _, PrID), exam(PrID, 1, L1), exam(PrI
 dur_chair(ID, L+N) :- timeOccupation(ID, L, PrID), delay(ID, N), required_chair(PrID).
 dur_tom(ID, L) :- reg(ID, _, PrID), exam(PrID, 3, L), required_chair(PrID).
 dur_tom(ID, L0+L1+N) :- timeOccupation(ID, L0, PrID), delay(ID, N), exam(PrID, 3, L1), not required_chair(PrID).
-{delay(ID, N) : N = 1..6} :- room(ID, _).
+{delay(ID, N) : N = 1..X, delay(X)} :- room(ID, _).
 :~ delay(ID, N). [N@1,ID]
 
 #show delay/2.
