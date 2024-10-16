@@ -5,12 +5,13 @@ https://github.com/potassco/clingo/blob/master/INSTALL.md, https://potassco.org/
 
 There are 2 main folders, one for the Encodings and one containing the Input instances.
 
-Inside the Encoding folder, there are 3 files: one is the Direct encoding, the other two represent the encodings for the LBBD methodology, the encoding for the Main problem (MP) and the encoding for the Sub problem (SP).
+Inside the Encoding folder, there are 4 files: one is the Direct encoding (Direct.lp), another one is the Direct encoding enriched by the fairness rules (Direct+Fair.lp), the other two represent the encodings for the LBBD methodology, the encoding for the Main problem (MP.lp) and the encoding for the Sub problem (SP.lp).
 
 
-The Direct encoding can be executed with the following command: 
+The Direct and the Direct+Fair encodings can be executed with the following command: 
 
 ```./clingo Encoding/Direct.lp input/input_N.lp --restart-on-model --time-limit=120```
+```./clingo Encoding/Direct+Fair.lp input/input_N.lp --restart-on-model --time-limit=120```
 
 For the encodings for the LBBD methodology we suggest using the same command plus the --outf=3 option, to avoid too many outputs in the command line: 
 
