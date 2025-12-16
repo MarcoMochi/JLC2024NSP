@@ -8,7 +8,7 @@ dur(ID, L0+L1,1) :- timeOccupation(ID, L0, PrID), exam(PrID, 3, L1), not require
 :- #sum{L, ID: dur(ID, L, 0), room(ID,ROOM_ID)} > 360, room(_, ROOM_ID).
 :- #sum{L, ID: dur(ID, L, 1), room(ID,ROOM_ID)} > 120, room(_, ROOM_ID). 
 :- #count{ID: room(ID, ROOM_ID), x(ID, _, X, _)} > N, limit(X, N), room(_,ROOM_ID).
-:- not room(ID, ID), x(ID, D, X, _), on(X, ID).
+:- not room(ID, ID2), x(ID, D, X, _), on(X, ID2).
 :~ not x(ID, D,  _,0), reg(ID, D, _). [1@3, ID, D]
 
 #show x/4.
